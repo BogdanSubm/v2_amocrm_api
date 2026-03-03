@@ -31,6 +31,23 @@ class BaseInteraction:
     def _get_url(self, path):
         return "https://{subdomain}.amocrm.ru/api/v4/{path}".format(subdomain=self._token_manager.subdomain, path=path)
 
+    def _sanitize_custom_fields(self, payload):
+        if isinstance(payload, list):
+            for item in payload:
+                self._sanitize_custom_fields(item)
+            return
+
+        if not isinstance(payload, dict):
+            return
+
+        fields = payload.get("custom_fields_values")
+        if fields:
+            for field in fields:
+                allowed = {"field_id", "field_code", "values"}
+                for key in list(field.keys()):
+                    if key not in allowed:
+                        field.pop(key)
+
     def _request(self, method, path, data=None, params=None, headers=None):
         headers = headers or {}
         headers.update(self.get_headers())
@@ -54,6 +71,9 @@ class BaseInteraction:
         params = params or {}
         if include:
             params["with"] = ",".join(include)
+        # Самый настоящий хот-фикс
+        if method in ("post", "patch") and data:
+            self._sanitize_custom_fields(data)
         return self._request(method, path, data=data, params=params, headers=headers)
 
     def _list(self, path, page, include=None, limit=250, query=None, filters: Tuple[Filter] = (), order=None):
