@@ -21,7 +21,7 @@ setup(
     author='Dmitry Kryukov',
     author_email='glebov.ru@gmail.com',
     description='Python API for Amocrm',
-    long_description=open('README.rst').read(),
+    long_description=open('README.rst', encoding='utf-8').read(),
     install_requires=[
         'requests',
         'pyjwt',
